@@ -2,6 +2,7 @@ package com.example.audiorecorder;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.media.MediaPlayer;
 import android.media.MediaRecorder;
 import android.os.Bundle;
@@ -16,8 +17,6 @@ import androidx.core.app.ActivityCompat;
 
 import java.io.IOException;
 import java.util.Random;
-
-import com.example.audiorecorder.AudioUtils;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -183,6 +182,12 @@ public class MainActivity extends AppCompatActivity {
                 String text = fileName + " " + amplitudes.length + "\n";
                 textView.setText(text);
                 textView.append(data);
+
+
+                // Works fine when button is pressed on the first time; but not on the second
+                WaveformView waveformView = findViewById(R.id.waveformView);
+                waveformView.setWaveformData(ampl);
+                waveformView.setWaveformColor(Color.RED);
 
             }
         });
