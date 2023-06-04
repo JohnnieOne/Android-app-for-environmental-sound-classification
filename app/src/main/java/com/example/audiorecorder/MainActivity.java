@@ -183,6 +183,7 @@ public class MainActivity extends AppCompatActivity {
                     int signalY = signal[0].length;
                     String signalLength = signalX + " " + signalY + "\n";
 
+
                     String spectrumString = Arrays.deepToString(spectrum);
                     int spectrumX = spectrum.length;
                     int spectrumY = spectrum[0].length;

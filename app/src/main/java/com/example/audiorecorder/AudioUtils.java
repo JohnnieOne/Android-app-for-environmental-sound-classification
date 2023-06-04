@@ -13,6 +13,7 @@ import java.util.Arrays;
 public class AudioUtils {
     private static final int DATA_SAMPLE_AVERAGE = 220500;
 
+
     private static void normalize(float[][] array) {
         float min = Float.MAX_VALUE;
         float max = Float.MIN_VALUE;
