@@ -14,7 +14,7 @@ public class WaveformView extends View {
     private static final int DEFAULT_COLOR = Color.RED;
     private static final float DEFAULT_STROKE_WIDTH = 2f;
 
-    private short[] waveform;
+    private float[] waveform;
     private Paint waveformPaint;
 
     private int waveformColor = DEFAULT_COLOR;
@@ -40,15 +40,16 @@ public class WaveformView extends View {
         waveformPaint.setStrokeWidth(DEFAULT_STROKE_WIDTH);
     }
 
-    public void setWaveformData(short[] waveform) {
+    public void setWaveformData(float[] waveform) {
 
-        short[] scaled = new short[waveform.length];
-        for (short i = 0; i < waveform.length; i++){
-            int SCALE = 3;
-            scaled[i] = (short) (waveform[i] * SCALE);
-        }
-
-        this.waveform = scaled;
+//        float[] scaled = new float[waveform.length];
+//        for (short i = 0; i <= waveform.length; i++){
+//            int SCALE = 3;
+//            scaled[i] = (float) (waveform[i] * SCALE);
+//        }
+//
+//        this.waveform = scaled;
+        this.waveform = waveform;
         redrawWaveform = true; // Set flag to indicate waveform needs to be redrawn
         invalidate(); // Trigger redraw
     }
@@ -78,7 +79,7 @@ public class WaveformView extends View {
             float xIncrement = (float) width / waveform.length;
             float currentX = 0f;
 
-            for (short amplitude : waveform) {
+            for (float amplitude : waveform) {
                 float startY = centerY - amplitude * centerY / Short.MAX_VALUE;
                 float endY = centerY + amplitude * centerY / Short.MAX_VALUE;
 

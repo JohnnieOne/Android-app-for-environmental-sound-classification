@@ -16,6 +16,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Random;
 
 
@@ -159,35 +160,48 @@ public class MainActivity extends AppCompatActivity {
         });
 
         Button classifyButton = findViewById(R.id.btnClassify);
-        TextView textView = findViewById(R.id.textView);
 
         classifyButton.setOnClickListener(new View.OnClickListener() {
             String classifyMsg;
 
             @Override
             public void onClick(View view) {
-                count++;
-                classifyMsg = "Test " + count + ": " + fileName;
+                try {
+                    // readSignal function is working correctly -> the output is a (1,220500) 2D array
+                    float[][] signal = AudioUtils.readSignal(fileName);
+                    int w = 100;
+                    int flag = 0;
+                    int[] channels = {2, 4, 8, 16, 20, 32, 50, 64, 100, 128, 200, 300};
 
 
-                short[] ampl = AudioUtils.getAmplitudes(fileName);
-                amplitudes = AudioUtils.resizeAmplitudes(ampl, DATA_SAMPLE_AVERAGE);
+                    // NRDT function is not giving the correct output -> (11, 220)
+                    // More testing to find the bug
+                    float[][] spectrum = AudioUtils.NRDT(fileName, w, flag, channels);
 
-                StringBuilder data = new StringBuilder();
-                for (short soundDatum : amplitudes) {
-                    String temp = soundDatum + " ";
-                    data.append(temp);
+                    String signalString = Arrays.deepToString(signal);
+                    int signalX = signal.length;
+                    int signalY = signal[0].length;
+                    String signalLength = signalX + " " + signalY + "\n";
+
+                    String spectrumString = Arrays.deepToString(spectrum);
+                    int spectrumX = spectrum.length;
+                    int spectrumY = spectrum[0].length;
+                    String spectrumLength = spectrumX + " " + spectrumY + "\n";
+
+                    TextView textView = findViewById(R.id.textView);
+
+                    textView.setText(signalLength);
+                    textView.append(spectrumLength);
+
+
+//                    // Currently not working, but it is not a priority
+//                    WaveformView waveformView = findViewById(R.id.waveformView);
+//                    waveformView.setWaveformData(signal[0]);
+//                    waveformView.setWaveformColor(Color.RED);
+
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
-
-                String text = fileName + " " + amplitudes.length + "\n";
-                textView.setText(text);
-                textView.append(data);
-
-
-                // Works fine when button is pressed on the first time; but not on the second
-                WaveformView waveformView = findViewById(R.id.waveformView);
-                waveformView.setWaveformData(ampl);
-                waveformView.setWaveformColor(Color.RED);
 
             }
         });
@@ -208,7 +222,7 @@ public class MainActivity extends AppCompatActivity {
 //            // Releases model resources if no longer used.
 //            model.close();
 //        } catch (IOException e) {
-//            // TODO Handle the exception
+//            e.printStackTrace();
 //        }
 
 
