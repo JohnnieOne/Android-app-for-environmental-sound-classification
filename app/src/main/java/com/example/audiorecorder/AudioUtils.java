@@ -8,6 +8,7 @@ import java.nio.ShortBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
 
 public class AudioUtils {
@@ -79,110 +80,65 @@ public class AudioUtils {
         }
     }
 
-    public static float[][] NRDT(String filename, int w, int flag, int[] channels) throws IOException {
+    public static float[][] NRDT(String filename) throws IOException {
+        int[] channels = {2, 4, 8, 16, 20, 32, 50, 64, 100, 128, 200, 300};
+        int w = 1000;
+        int flag = 0;
         float[][] signal = readSignal(filename);
-        // signal = convertToFloat32(signal);
-
         int Nsamples = signal[0].length;
-        float delmax = w / 4f;
-        int count = 0;
-        for (int channel : channels) {
-            if (channel <= delmax) {
-                count++;
+        float delmax = w / 4;
+        ArrayList<Integer> res = new ArrayList<Integer>();
+        for (int i = 0; i < channels.length; i++) {
+            if (channels[i] <= delmax) {
+                res.add(channels[i]);
             }
         }
-        int[] res = new int[count];
-        int index = 0;
-        for (int channel : channels) {
-            if (channel <= delmax) {
-                res[index++] = channel;
-            }
+        int[] channels_res = new int[res.size()];
+        for (int i = 0; i < res.size(); i++) {
+            channels_res[i] = res.get(i);
         }
-        channels = res;
-        int m = channels.length;
-
+        int m = channels_res.length;
         int spectrograms = Nsamples / w;
-        int samples = spectrograms * w;
-        float[][] matrix = reshape(signal[0], spectrograms, w);
-
+        int Samples = spectrograms * w;
+        float[][] matrix = new float[spectrograms][w];
+        for (int i = 0; i < spectrograms; i++) {
+            for (int j = 0; j < w; j++) {
+                matrix[i][j] = signal[0][i * w + j];
+            }
+        }
         float[][] spectrum = new float[m][spectrograms];
         for (int i = 0; i < spectrograms; i++) {
             float[] values = matrix[i];
             for (int k = 0; k < m; k++) {
-                int delay = channels[k];
-                int[] t = new int[w - delay - 1];
+                int delay = channels_res[k];
+                int[] t = new int[w - 2 * delay - 1];
                 for (int j = 0; j < t.length; j++) {
-                    t[j] = delay + j + 1;
+                    t[j] = j + delay;
                 }
                 float[] difus = new float[t.length];
                 for (int j = 0; j < t.length; j++) {
-                    int tIndex = t[j];
-                    if (tIndex < values.length && tIndex - delay >= 0 && tIndex + delay < values.length) {
-                        difus[j] = Math.abs(values[tIndex - delay] + values[tIndex + delay] - 2 * values[tIndex]);
-                    } else {
-                        // Handle out-of-bounds index
-                        difus[j] = 0.0f;
-                    }
+                    difus[j] = Math.abs(values[t[j] - delay] + values[t[j] + delay] - 2 * values[t[j]]);
                 }
                 if (flag == 0) {
-                    spectrum[k][i] = mean(difus) / 4f;
+                    spectrum[k][i] = mean(difus) / 4;
                 } else if (flag == 1) {
-                    float denominator = mean(difus) / (meanAbs(values, t, delay) + 1e-12f);
-                    spectrum[k][i] = denominator / 4f;
+                    float[] temp = new float[t.length];
+                    for (int j = 0; j < t.length; j++) {
+                        temp[j] = difus[j] / (Math.abs(values[t[j] - delay]) + Math.abs(values[t[j] + delay]) + 2 * Math.abs(values[t[j]]) + 1e-12f);
+                    }
+                    spectrum[k][i] = mean(temp) / 4;
                 }
             }
         }
         return spectrum;
     }
 
-
-    private static float[][] convertToFloat32(float[][] signal) {
-        // Implement the logic to convert the signal to float32 if required
-        // and return the converted signal as a float[][] array
-        return signal;
-    }
-
-    private static int[] findChannels(int[] channels, float delmax) {
-        int count = 0;
-        for (int channel : channels) {
-            if (channel <= delmax) {
-                count++;
-            }
+    public static float mean(float[] arr) {
+        float sum = 0;
+        for (int i = 0; i < arr.length; i++) {
+            sum += arr[i];
         }
-        int[] res = new int[count];
-        int index = 0;
-        for (int channel : channels) {
-            if (channel <= delmax) {
-                res[index++] = channel;
-            }
-        }
-        return res;
-    }
-
-    private static float[][] reshape(float[] array, int rows, int cols) {
-        float[][] reshapedArray = new float[rows][cols];
-        int index = 0;
-        for (int i = 0; i < rows; i++) {
-            for (int j = 0; j < cols; j++) {
-                reshapedArray[i][j] = array[index++];
-            }
-        }
-        return reshapedArray;
-    }
-
-    private static float mean(float[] array) {
-        float sum = 0f;
-        for (float num : array) {
-            sum += num;
-        }
-        return sum / array.length;
-    }
-
-    private static float meanAbs(float[] values, int[] indices, int delay) {
-        float sum = 0f;
-        for (int index : indices) {
-            sum += Math.abs(values[index]);
-        }
-        return sum / indices.length;
+        return sum / arr.length;
     }
 }
+

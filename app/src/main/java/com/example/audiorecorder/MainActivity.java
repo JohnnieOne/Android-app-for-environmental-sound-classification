@@ -167,16 +167,17 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 try {
-                    // readSignal function is working correctly -> the output is a (1,220500) 2D array
+                    // readSignal function is giving the correct output is a (1,220500) 2D array
                     float[][] signal = AudioUtils.readSignal(fileName);
                     int w = 100;
                     int flag = 0;
                     int[] channels = {2, 4, 8, 16, 20, 32, 50, 64, 100, 128, 200, 300};
 
 
-                    // NRDT function is not giving the correct output -> (11, 220)
-                    // More testing to find the bug
-                    float[][] spectrum = AudioUtils.NRDT(fileName, w, flag, channels);
+                    // NRDT function is giving the correct output is a (11,220) 2D array
+                    // for both functions further tests will be run in order to make sure
+                    // that they are working as designed
+                    float[][] spectrum = AudioUtils.NRDT(fileName);
 
                     String signalString = Arrays.deepToString(signal);
                     int signalX = signal.length;
@@ -193,6 +194,7 @@ public class MainActivity extends AppCompatActivity {
 
                     textView.setText(signalLength);
                     textView.append(spectrumLength);
+                    textView.append(spectrumString);
 
 
 //                    // Currently not working, but it is not a priority
