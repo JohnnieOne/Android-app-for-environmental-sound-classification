@@ -2,6 +2,7 @@ package com.example.audiorecorder;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
+import android.content.res.AssetManager;
 import android.graphics.Color;
 import android.media.MediaPlayer;
 import android.media.MediaRecorder;
@@ -34,11 +35,10 @@ public class MainActivity extends AppCompatActivity {
     private boolean permissionToRecordAccepted = false;
     private final String[] permissions = {Manifest.permission.RECORD_AUDIO};
 
-    private int count = 0;
+    private ImageClassifier imageClassifier;
 
     private static final int DATA_SAMPLE_AVERAGE = 220500;
 
-    private short[] amplitudes;
 
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -114,6 +114,20 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    private String processClassificationResults(float[] probabilities) {
+        int maxIndex = 0;
+        float maxProbability = probabilities[0];
+        for (int i = 1; i < probabilities.length; i++) {
+            if (probabilities[i] > maxProbability) {
+                maxIndex = i;
+                maxProbability = probabilities[i];
+            }
+        }
+
+        // Output the predicted class label
+        return "Class " + maxIndex;
+    }
+
 
     public void onCreate(Bundle icicle) {
         super.onCreate(icicle);
@@ -172,7 +186,12 @@ public class MainActivity extends AppCompatActivity {
                     int w = 100;
                     int flag = 0;
                     int[] channels = {2, 4, 8, 16, 20, 32, 50, 64, 100, 128, 200, 300};
-
+                    int batchSize = 1;
+                    int imageWidth = 220;
+                    int imageHeight = 11;
+                    int chan = 1;
+                    int numClasses = 50;
+                    String modelPath = "model_esc50.tflite";
 
                     // NRDT function is giving the correct output is a (11,220) 2D array
                     // for both functions further tests will be run in order to make sure
@@ -190,11 +209,21 @@ public class MainActivity extends AppCompatActivity {
                     int spectrumY = spectrum[0].length;
                     String spectrumLength = spectrumX + " " + spectrumY + "\n";
 
+                    AssetManager assetManager = getAssets();
+                    imageClassifier = new ImageClassifier(assetManager, batchSize, imageWidth, imageHeight, chan, numClasses,  modelPath);
                     TextView textView = findViewById(R.id.textView);
+                    String msj = "Probabilities: \n";
 
-                    textView.setText(signalLength);
-                    textView.append(spectrumLength);
-                    textView.append(spectrumString);
+                    float[] probabilities = imageClassifier.classifyImage(spectrum);
+
+                    textView.setText(msj);
+                    String predicted = processClassificationResults(probabilities);
+                    textView.append(predicted);
+
+
+//                    textView.setText(signalLength);
+//                    textView.append(spectrumLength);
+//                    textView.append(spectrumString);
 
 
 //                    // Currently not working, but it is not a priority
@@ -208,27 +237,6 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
-
-
-//        try {
-//            ModelEsc50 model = ModelEsc50.newInstance(this);
-
-//            // Creates inputs for reference.
-//            TensorBuffer inputFeature0 = TensorBuffer.createFixedSize(new int[]{1, 11, 220, 1}, DataType.FLOAT32);
-//            ByteBuffer byteBuffer = null;
-//            inputFeature0.loadBuffer(byteBuffer);
-//
-//            // Runs model inference and gets result.
-//            ModelEsc50.Outputs outputs = model.process(inputFeature0);
-//            TensorBuffer outputFeature0 = outputs.getOutputFeature0AsTensorBuffer();
-//
-//            // Releases model resources if no longer used.
-//            model.close();
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-
-
     }
 
 
