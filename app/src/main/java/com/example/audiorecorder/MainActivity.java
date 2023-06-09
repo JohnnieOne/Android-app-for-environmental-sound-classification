@@ -1,6 +1,7 @@
 package com.example.audiorecorder;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
 import android.graphics.Color;
@@ -10,14 +11,24 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
+import org.tensorflow.lite.DataType;
+import org.tensorflow.lite.Interpreter;
+import org.tensorflow.lite.support.common.FileUtil;
+import org.tensorflow.lite.support.image.TensorImage;
+import org.tensorflow.lite.support.tensorbuffer.TensorBuffer;
+
 import java.io.IOException;
+import java.nio.MappedByteBuffer;
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.Random;
 
 
@@ -36,6 +47,7 @@ public class MainActivity extends AppCompatActivity {
     private final String[] permissions = {Manifest.permission.RECORD_AUDIO};
 
     private ImageClassifier imageClassifier;
+    private String modelPath;
 
     private static final int DATA_SAMPLE_AVERAGE = 220500;
 
@@ -49,13 +61,7 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private void onRecord(boolean start) {
-        if (start) {
-            startRecording();
-        } else {
-            stopRecording();
-        }
-    }
+
 
     private void onPlay(boolean start) {
         if (start) {
@@ -79,6 +85,14 @@ public class MainActivity extends AppCompatActivity {
     private void stopPlaying() {
         player.release();
         player = null;
+    }
+
+    private void onRecord(boolean start) {
+        if (start) {
+            startRecording();
+        } else {
+            stopRecording();
+        }
     }
 
     private void startRecording() {
@@ -173,6 +187,26 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        RadioGroup radioGroup = findViewById(R.id.radioGroup);
+        RadioButton radioButton1 = findViewById(R.id.radioButton1);
+        RadioButton radioButton2 = findViewById(R.id.radioButton2);
+
+        radioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(RadioGroup group, int checkedId) {
+                if (checkedId == R.id.radioButton1) {
+                    radioButton2.setChecked(false);
+                    // Perform actions for Switch 1 being turned on
+
+                    modelPath = "model_esc50.tflite";
+                } else if (checkedId == R.id.radioButton2) {
+                    radioButton1.setChecked(false);
+                    // Perform actions for Switch 2 being turned on
+                    modelPath = "model_us8k.tflite";
+                }
+            }
+        });
+
         Button classifyButton = findViewById(R.id.btnClassify);
 
         classifyButton.setOnClickListener(new View.OnClickListener() {
@@ -190,8 +224,7 @@ public class MainActivity extends AppCompatActivity {
                     int imageWidth = 220;
                     int imageHeight = 11;
                     int chan = 1;
-                    int numClasses = 50;
-                    String modelPath = "model_esc50.tflite";
+                    int numClasses;
 
                     // NRDT function is giving the correct output is a (11,220) 2D array
                     // for both functions further tests will be run in order to make sure
@@ -210,11 +243,49 @@ public class MainActivity extends AppCompatActivity {
                     String spectrumLength = spectrumX + " " + spectrumY + "\n";
 
                     AssetManager assetManager = getAssets();
+                    if (Objects.equals(modelPath, "model_esc50.tflite")) {
+                        numClasses = 50;
+                    } else {
+                        numClasses = 10;
+                    }
                     imageClassifier = new ImageClassifier(assetManager, batchSize, imageWidth, imageHeight, chan, numClasses,  modelPath);
+
+
                     TextView textView = findViewById(R.id.textView);
                     String msj = "Probabilities: \n";
 
                     float[] probabilities = imageClassifier.classifyImage(spectrum);
+
+//                    // Get the activity context
+//                    Activity activity = (Activity) view.getContext();
+//
+//                    // Load the TensorFlow Lite model using the activity context
+//                    MappedByteBuffer tfliteModel = FileUtil.loadMappedFile(activity, modelPath);
+//
+//                    // Create the TensorFlow Lite interpreter
+//                    Interpreter interpreter = new Interpreter(tfliteModel, new Interpreter.Options());
+//
+//                    // Create a TensorImage object and load the input image into it
+//                    TensorImage tensorImage = new TensorImage(DataType.FLOAT32);
+//                    tensorImage.load(spectrum);
+//
+//                    // Resize the TensorImage to match the required input shape (1, 11, 220, 1)
+//                    tensorImage = tensorImage.resize(new int[]{1, 11, 220, 1});
+//
+//                    // Get the TensorBuffer from the TensorImage
+//                    TensorBuffer inputBuffer = tensorImage.getTensorBuffer();
+//
+//                    // Allocate the output buffer
+//                    TensorBuffer outputBuffer = TensorBuffer.createFixedSize(new int[]{1, numClasses}, DataType.FLOAT32);
+//
+//                    // Run the inference
+//                    interpreter.run(inputBuffer.getBuffer(), outputBuffer.getBuffer());
+//                    float[] probabilities = outputBuffer.getFloatArray();
+
+                    // text for testing
+                    for (float cls : probabilities){
+                        System.out.println(cls);
+                    }
 
                     textView.setText(msj);
                     String predicted = processClassificationResults(probabilities);
@@ -225,11 +296,6 @@ public class MainActivity extends AppCompatActivity {
 //                    textView.append(spectrumLength);
 //                    textView.append(spectrumString);
 
-
-//                    // Currently not working, but it is not a priority
-//                    WaveformView waveformView = findViewById(R.id.waveformView);
-//                    waveformView.setWaveformData(signal[0]);
-//                    waveformView.setWaveformColor(Color.RED);
 
                 } catch (IOException e) {
                     e.printStackTrace();

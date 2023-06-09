@@ -4,4 +4,6 @@
     <string name="record">Record</string>
     <string name="play">Play</string>
     <string name="classify">Classify</string>
+    <string name="esc50">ESC50</string>
+    <string name="urbansound8k">UrbanSound8k</string>
 </resources>
