@@ -4,6 +4,8 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.media.MediaPlayer;
 import android.media.MediaRecorder;
@@ -26,6 +28,7 @@ import org.tensorflow.lite.support.image.TensorImage;
 import org.tensorflow.lite.support.tensorbuffer.TensorBuffer;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.MappedByteBuffer;
 import java.util.Arrays;
 import java.util.Objects;
@@ -216,10 +219,10 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View view) {
                 try {
                     // readSignal function is giving the correct output is a (1,220500) 2D array
-                    float[][] signal = AudioUtils.readSignal(fileName);
                     int w = 100;
                     int flag = 0;
                     int[] channels = {2, 4, 8, 16, 20, 32, 50, 64, 100, 128, 200, 300};
+                    float[][] signal = AudioUtils.readSignal(fileName);
                     int batchSize = 1;
                     int imageWidth = 220;
                     int imageHeight = 11;
@@ -249,7 +252,6 @@ public class MainActivity extends AppCompatActivity {
                         numClasses = 10;
                     }
                     imageClassifier = new ImageClassifier(assetManager, batchSize, imageWidth, imageHeight, chan, numClasses,  modelPath);
-
 
                     TextView textView = findViewById(R.id.textView);
                     String msj = "Probabilities: \n";

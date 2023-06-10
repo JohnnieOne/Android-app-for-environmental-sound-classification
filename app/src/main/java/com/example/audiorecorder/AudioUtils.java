@@ -1,7 +1,10 @@
 package com.example.audiorecorder;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.ShortBuffer;
@@ -13,7 +16,6 @@ import java.util.Arrays;
 
 public class AudioUtils {
     private static final int DATA_SAMPLE_AVERAGE = 220500;
-
 
     private static void normalize(float[][] array) {
         float min = Float.MAX_VALUE;
@@ -64,9 +66,7 @@ public class AudioUtils {
             signal = new float[1][DATA_SAMPLE_AVERAGE];
             System.arraycopy(floatData, 0, signal[0], 0, DATA_SAMPLE_AVERAGE);
         }
-
         normalize(signal);
-
         return signal;
     }
 
@@ -80,11 +80,26 @@ public class AudioUtils {
         }
     }
 
-    public static float[][] NRDT(String filename) throws IOException {
+//    public static float[][] readSignal(float[] floatData) {
+//        int dataSize = floatData.length;
+//        float[][] signal;
+//
+//        if (dataSize <= DATA_SAMPLE_AVERAGE) {
+//            signal = new float[1][DATA_SAMPLE_AVERAGE];
+//            Arrays.fill(signal[0], 0, dataSize, 0f);
+//            System.arraycopy(floatData, 0, signal[0], 0, dataSize);
+//        } else {
+//            signal = new float[1][DATA_SAMPLE_AVERAGE];
+//            System.arraycopy(floatData, 0, signal[0], 0, DATA_SAMPLE_AVERAGE);
+//        }
+//        return signal;
+//    }
+
+    public static float[][] NRDT(String file) throws IOException {
         int[] channels = {2, 4, 8, 16, 20, 32, 50, 64, 100, 128, 200, 300};
         int w = 1000;
         int flag = 0;
-        float[][] signal = readSignal(filename);
+        float[][] signal = readSignal(file);
         int Nsamples = signal[0].length;
         float delmax = w / 4;
         ArrayList<Integer> res = new ArrayList<Integer>();
